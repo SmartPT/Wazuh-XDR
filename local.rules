@@ -1,0 +1,57 @@
+<!-- SmartPT Assume Breach Configuration -->
+<group name="SmartPT-Assume-Breach">
+    <!-- Admin Activity Monitoring -->
+    <rule id="191111" level="7">
+        <if_sid>61663</if_sid> <!-- Sysmon event ID 1 -->
+        <field name="win.eventdata.user" type="pcre2">(?i)(Admin|Administrator)</field>
+        <description>New admin process detected - Possible privilege escalation [MITRE ID: T1078]</description>
+    </rule>
+
+    <rule id="191117" level="7">
+        <if_sid>61609</if_sid> <!-- Sysmon event ID 7 -->
+        <field name="win.eventdata.user" type="pcre2">(?i)(Admin|Administrator)</field>
+        <description>New admin process detected - Possible unauthorized access [MITRE ID: T1078]</description>
+    </rule>
+
+    <!-- Security Authentication Monitoring -->
+    <rule id="101010" level="0">
+        <if_group>authentication_success</if_group>
+        <field name="win.system.eventID">4624</field>
+        <field name="win.eventdata.ipAddress" type="pcre2" negate="no"></field> <!-- Ensure IP logging -->
+        <field name="win.eventdata.logonType" type="pcre2" negate="yes">4</field>
+        <description>Successful authentication detected - Potential credential compromise [MITRE ID: T1078]</description>
+    </rule>
+
+    <rule id="101011" level="0">
+        <if_group>authentication_failed</if_group>
+        <field name="win.system.eventID">4625</field>
+        <field name="win.eventdata.ipAddress" type="pcre2" negate="no"></field>
+        <field name="win.eventdata.logonType" type="pcre2" negate="yes">4</field>
+        <description>Failed authentication attempt detected - Possible brute-force attack [MITRE ID: T1110]</description>
+    </rule>
+
+    <!-- Domain Admin Activities Monitoring -->
+    <rule id="333333" level="13">
+        <if_sid>100010,100011</if_sid>
+        <regex type="pcre2" negate="no">10.15.100.+|10.15.101.+</regex>
+        <field name="win.eventdata.targetUserName" type="pcre2">(?i)(Administrator|avi)</field>
+        <field name="win.system.eventID" type="pcre2">(?!4768|4769|4770|8014|4771).*</field> <!-- Exclude specific event IDs -->
+        <description>Domain Admin Activities From Endpoints - Potential privilege escalation [MITRE ID: T1078]</description>
+        <options>no_full_log</options>
+    </rule>
+
+    <!-- Command and Control (C2) Detection -->
+    <rule id="111111" level="15">
+        <if_matched_sid>61609</if_matched_sid> <!-- Sysmon event ID 3 -->
+        <if_matched_sid>61605</if_matched_sid> <!-- Sysmon event ID 7 -->
+        <same_field>win.eventdata.image</same_field>
+        <description>Possible C2 traffic detected - Communication with external adversary [MITRE ID: T1071]</description>
+    </rule>
+
+    <!-- Ransomware Detection -->
+    <rule id="555555" level="12" frequency="10" timeframe="30">
+        <if_matched_sid>554</if_matched_sid>
+        <description>Possible ransomware activity detected - High-risk encryption behavior [MITRE ID: T1486]</description>
+        <group>ransomware</group>
+    </rule>
+</group>
