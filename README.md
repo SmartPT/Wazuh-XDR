@@ -96,8 +96,3 @@ All Wazuh alerts are sent to customers via WhatsApp AI bots, providing:
 📢 Visit SmartPT Website https://smartpt.co.il for WhatsApp bot integration, AI-driven security, and professional cybersecurity consulting!
 
 
-
-📜 License
-
-
-This project is licensed under the MIT License.
