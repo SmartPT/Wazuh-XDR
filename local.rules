@@ -55,3 +55,21 @@
         <group>ransomware</group>
     </rule>
 </group>
+
+
+ <!-- Traps Detection -->
+ <group name="SmartPT-Security-traps">
+<rule id="555556" level="15"> 
+  <if_sid>553,550</if_sid>
+   <regex type="pcre2" negate="no">3e2829c247802449b13d55add73964f40edc0838</regex>
+  <description>traps activities detected $(file)</description>
+</rule>
+
+<rule id="555557" level="15"> 
+  <if_sid>553,550</if_sid>
+   <regex type="pcre2" negate="no">69f079b196f90eaea0f6d060d23669e5</regex>
+  <description>logon script change detected $(file)</description>
+</rule>
+
+ </group>
+
