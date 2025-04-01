@@ -27,7 +27,9 @@ SmartPT includes predefined rules and active response scripts to secure networks
 - **Unauthorized Logins** – Identifies suspicious login attempts and brute-force attacks.  
 - **Malicious Network Traffic** – Blocks external C2 communication.  
 - **Ransomware Mitigation** – Detects abnormal file encryption.  
-- **Automated Isolation** – Shuts down infected endpoints and processes.  
+- **Traps** - Detects ransomware behaviors and critical script changes in real time
+- **Automated Isolation** – Shuts down infected endpoints and processes.
+  
 
 ## Stay Secure
 
