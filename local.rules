@@ -70,6 +70,12 @@
    <regex type="pcre2" negate="no">69f079b196f90eaea0f6d060d23669e5</regex>
   <description>logon script change detected $(file)</description>
 </rule>
+<rule id="555558" level="13"> 
+  <if_sid>550,553,554</if_sid>
+   <regex type="pcre2" negate="no">sysvol</regex>
+  <description>group policy change activities detected $(file)</description>
+</rule>
+
 
  </group>
 
