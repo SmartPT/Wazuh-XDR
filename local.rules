@@ -78,7 +78,7 @@
  </group>
 
 
-
+<!-- Detects ping commands to IPs in the 10.17.*.17 range. -->
 <group name="SmartPT-Admin-Network-Activities">
 <rule id="110023" level="14">
 <if_sid>61603</if_sid> <!-- sysmon event ID 1 -->
