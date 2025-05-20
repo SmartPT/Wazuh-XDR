@@ -75,7 +75,17 @@
    <regex type="pcre2" negate="no">sysvol</regex>
   <description>group policy change activities detected $(file)</description>
 </rule>
-
-
  </group>
+
+
+
+<group name="SmartPT-Admin-Network-Activities">
+<rule id="110023" level="14">
+<if_sid>61603</if_sid> <!-- sysmon event ID 1 -->
+<field name="win.eventdata.originalFileName" type="pcre2">(?i)(ping.exe)</field>
+<regex type="pcre2" negate="no">10\.17\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.17</regex>
+<description>Ping traps | Command executed:$(win.eventdata.commandLine)</description>
+</rule>
+</group>
+
 
