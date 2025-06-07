@@ -13,7 +13,7 @@ API_ENDPOINT = "https://apiv2.smartpt.co.il/aialerts"
 THROTTLE_INTERVAL = timedelta(minutes=100)  # Wait 1 minute before sending the same alert
 
 # Hardcoded SHA-256 key for customer identification
-SHA256_KEY = ""
+SHA256_KEY = "customer key"
 
 def log_message(message):
     """Logs a message with a timestamp to the log file."""
