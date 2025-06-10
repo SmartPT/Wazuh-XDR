@@ -9,7 +9,7 @@ OUTPUT_FILE = "/var/ossec/logs/extracted_data.json"
 THROTTLE_FILE = "/var/ossec/logs/switchthrottle_tracker.json"
 API_ENDPOINT = "https://xxx.smartpt.co.il/alerts"
 THROTTLE_INTERVAL = timedelta(minutes=1)
-SHA256_KEY = ""
+SHA256_KEY = "customer key"
 
 def log_message(message):
     with open(LOG_FILE, "a") as log_file:
