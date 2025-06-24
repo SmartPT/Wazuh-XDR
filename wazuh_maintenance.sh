@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to the Wazuh alerts file
-ALERT_FILE="/var/ossec/logs/active-responses.log"
+ALERT_FILE="/var/ossec/logs/alerts/alerts.json"
 # Maximum allowed minutes since last log update
 MAX_AGE_MINUTES=1
 
