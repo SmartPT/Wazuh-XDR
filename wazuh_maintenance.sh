@@ -46,4 +46,4 @@ exit 0
 
 
 #send alerts by 
-#*/10 * * * * /root/Wazuh-Scripts/wazuh_maintenance.sh | /usr/bin/python3 /usr/local/bin/smartpt_forwarder.py
+#*/10 * * * * /root/Wazuh-Scripts/wazuh_maintenance.sh |/usr/bin/python3 /var/ossec/active-response/bin/Smartpt_forwarde>
