@@ -9,7 +9,7 @@ LOG_FILE = "/var/ossec/logs/active-responses.log"
 ALERT_FILE = "/var/ossec/logs/all_alert_data.json"
 OUTPUT_FILE = "/var/ossec/logs/extracted_data.json"
 THROTTLE_FILE = "/var/ossec/logs/throttle_tracker.json"
-API_ENDPOINT = "https://dev.smartpt.co.il/alerts"
+API_ENDPOINT = "https://xxx.smartpt.co.il/alerts"
 THROTTLE_INTERVAL = timedelta(minutes=180)
 SHA256_KEY = "customer key"
 
