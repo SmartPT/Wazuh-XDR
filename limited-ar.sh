@@ -1,23 +1,17 @@
 #!/bin/bash
 ###############################################################################
 # limited-ar.sh
-# • Reads an alert JSON file (first arg or default path)
+# • Reads an alert JSON from stdin
 # • Allows max 5 different agent.id values per rolling hour
 # • Re-runs are allowed for the same agent.id inside that window
 ###############################################################################
 
-# 1) Where is the JSON?
-INPUT_FILE=${1:-/var/ossec/logs/ransomware.json}
+# 1) Read JSON from stdin and save to file
+read INPUT_JSON
+echo $INPUT_JSON > /var/ossec/logs/citrix.json
 
-if [[ ! -r "$INPUT_FILE" ]]; then
-    echo "ERROR: Cannot read JSON input file: $INPUT_FILE" >&2
-    exit 1
-fi
-
-INPUT_JSON=$(cat "$INPUT_FILE")
-
-# 2) Pull agent.id  ─ "agent":{ … "id":"VALUE"
-AGENT_ID=$(printf '%s\n' "$INPUT_JSON" | grep -oP '"agent":\{.*?"id":"\K[^"]+')
+# 2) Pull agent.id ─ "agent":{ … "id":"VALUE"
+AGENT_ID=$(echo $INPUT_JSON | grep -oP '"agent":\{.*?"id":"\K[^"]+')
 
 if [[ -z "$AGENT_ID" ]]; then
     echo "ERROR: agent.id not found in JSON" >&2
