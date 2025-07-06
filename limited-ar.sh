@@ -8,7 +8,7 @@
 
 # 1) Read JSON from stdin and save to file
 read INPUT_JSON
-echo $INPUT_JSON > /var/ossec/logs/citrix.json
+echo $INPUT_JSON > /var/ossec/logs/ransomware.json
 
 # 2) Pull agent.id ─ "agent":{ … "id":"VALUE"
 AGENT_ID=$(echo $INPUT_JSON | grep -oP '"agent":\{.*?"id":"\K[^"]+')
@@ -20,7 +20,7 @@ fi
 echo "agent.id = $AGENT_ID"
 
 # 3) Paths / constants
-AR_SCRIPT="/var/ossec/active-response/bin/cortex_ransomware.sh"
+AR_SCRIPT="/var/ossec/active-response/bin/ransomware.sh"
 LOG_FILE="/tmp/python_agent_log.txt"
 TIME_WINDOW=3600          # seconds (1 hour)
 NOW=$(date +%s)
