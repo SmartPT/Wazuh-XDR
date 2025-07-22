@@ -14,7 +14,7 @@ API_ENDPOINT = "https://xxx.smartpt.co.il/alerts"
 THROTTLE_INTERVAL = timedelta(minutes=5)  # Wait 1 minute before sending the same alert
 
 # Hardcoded SHA-256 key for customer identification
-SHA256_KEY = "customer key"
+SHA256_KEY = ""
 
 def log_message(message):
     """Logs a message with a timestamp to the log file."""
@@ -40,7 +40,7 @@ def extract_fields(json_string):
         'agent_id': r'"agent":{.*?"id":"(.*?)"',
         'agent_ip': r'"agent":{.*?"ip":"(.*?)"',
         'rule_id': r'"rule":{.*?"id":"(.*?)"',
-       # 'mitre_tactic': r'"mitre":{.*?"tactic":\["(.*?)"\]',
+        'mitre_tactic': r'"mitre":{.*?"tactic":\["(.*?)"\]',
         'mitre_technique': r'"mitre":{.*?"technique":\["(.*?)"\]',
         'event_id': r'"eventID":"(.*?)"',
         'process_id': r'"processID":"(.*?)"',
@@ -668,7 +668,7 @@ def post_to_api(extracted_data):
     """Posts the extracted data to the API with only non-null fields and logs the response."""
     # Filter out fields with 'N/A' or None values
     filtered_data = {key: value for key, value in extracted_data.items() if value and value != "N/A"}
-    
+
     try:
         headers = {'Content-Type': 'application/json'}
         response = requests.post(API_ENDPOINT, headers=headers, json=filtered_data)
@@ -685,7 +685,7 @@ def post_to_api(extracted_data):
         log_message(f"Error posting data to {API_ENDPOINT}: {e}")
 
 if __name__ == "__main__":
-    log_message("Starting extract_data.py")
+    log_message("Starting SmartPT_Alerts.py")
 
     # Ensure the alert data file exists
     if not os.path.exists(ALERT_FILE):
