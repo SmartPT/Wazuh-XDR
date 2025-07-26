@@ -10,7 +10,7 @@ OUTPUT_FILE = "/var/ossec/logs/extracted_data.json"
 THROTTLE_FILE = "/var/ossec/logs/throttle_tracker.json"
 API_ENDPOINT = "https://dev.smartpt.co.il/Smartptdev"
 THROTTLE_INTERVAL = timedelta(minutes=74400)
-SHA256_KEY = "6f6e7909088faa9d31f43d9f03272c78817f7726b6621379adab515260f1fecb"
+SHA256_KEY = "customer key"
 
 def log_message(message):
     with open(LOG_FILE, "a") as log_file:
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         'X-WhatsApp-Enabled': 'true',
         'X-Email-Score-Threshold': '5',
         'X-WhatsApp-Score-Threshold': '5',
-        'X-Ticket-Email': 'eitanroz1@gmail.com',
+        'X-Ticket-Email': 'support@jira.com',
         'X-Ticket-Email-Score-Threshold': '5',
         'X-Ticket-Email-Subject': 'Custom Security Alert Notification',
         'X-Source-System': 'production_firewall',
