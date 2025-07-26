@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 LOG_FILE = "/var/ossec/logs/active-responses.log"
 OUTPUT_FILE = "/var/ossec/logs/extracted_data.json"
 THROTTLE_FILE = "/var/ossec/logs/throttle_tracker.json"
-API_ENDPOINT = "https://dev.smartpt.co.il/Smartptdev"
+API_ENDPOINT = "https://xxx.smartpt.co.il/aialerts"
 THROTTLE_INTERVAL = timedelta(minutes=74400)
 SHA256_KEY = "customer key"
 
