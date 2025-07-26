@@ -29,7 +29,7 @@ if [ ! -s "$ALERT_FILE" ]; then
 fi
 
 # ✅ Call your Python processor
-#PYTHON_SCRIPT="/var/ossec/active-response/bin/SmartPT_AI_v6.py"
+#PYTHON_SCRIPT="/var/ossec/active-response/bin/SmartPT_AI_v1.py"
 python3 "$PYTHON_SCRIPT" "$ALERT_FILE"
 PY_EXIT_CODE=$?
 
