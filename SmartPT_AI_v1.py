@@ -6,125 +6,160 @@ import requests
 from datetime import datetime, timedelta
 
 LOG_FILE = "/var/ossec/logs/active-responses.log"
-ALERT_FILE = "/var/ossec/logs/all_alert_data.json"
 OUTPUT_FILE = "/var/ossec/logs/extracted_data.json"
 THROTTLE_FILE = "/var/ossec/logs/throttle_tracker.json"
-API_ENDPOINT = "https://xxx.smartpt.co.il/aialerts"
-THROTTLE_INTERVAL = timedelta(minutes=100)
-SHA256_KEY = "customer key"
+API_ENDPOINT = "https://dev.smartpt.co.il/Smartptdev"
+THROTTLE_INTERVAL = timedelta(minutes=74400)
+SHA256_KEY = "6f6e7909088faa9d31f43d9f03272c78817f7726b6621379adab515260f1fecb"
 
 def log_message(message):
     with open(LOG_FILE, "a") as log_file:
         log_file.write(f"[{datetime.now()}] {message}\n")
 
-def read_json_file(file_path):
+def save_debug_log(raw_data, reason):
+    timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    debug_dir = "/var/ossec/logs/debug"
+    os.makedirs(debug_dir, exist_ok=True)
+    file_path = f"{debug_dir}/{timestamp_str}_needtocheck.log"
     try:
-        with open(file_path, "r") as json_file:
-            return json_file.read()  # return raw string
+        with open(file_path, "w") as f:
+            f.write(f"// {reason}\n")
+            f.write(raw_data + "\n")
+        log_message(f"❌ Saved debug log to {file_path}")
     except Exception as e:
-        log_message(f"Error reading JSON file: {e}")
+        log_message(f"❌ Failed to write debug log file: {e}")
+
+def read_raw_file(file_path):
+    try:
+        with open(file_path, "r") as f:
+            return f.read()
+    except Exception as e:
+        log_message(f"Error reading file: {e}")
         sys.exit(1)
 
-# Regex patterns for throttle check
-patterns = {
-    'agent_name': r'"agent":{.*?"name":"(.*?)"',
-    'rule_id': r'"rule":{.*?"id":"(.*?)"',
-    'timestamp': r'"timestamp":"(.*?)"',
-}
-
 def extract_throttle_keys(json_string):
-    extracted = {}
-    for key, pattern in patterns.items():
-        match = re.search(pattern, json_string)
-        extracted[key] = match.group(1) if match else "N/A"
-    return extracted
+    keys = {
+        "agent_name": "N/A",
+        "rule_id": "N/A",
+        "timestamp": "N/A"
+    }
+
+    agent_match = re.search(r'"agent"\s*:\s*{[^}]*?"name"\s*:\s*"([^"]+)"', json_string, re.DOTALL)
+    rule_match = re.search(r'"rule"\s*:\s*{[^}]*?"id"\s*:\s*"([^"]+)"', json_string, re.DOTALL)
+    time_match = re.search(r'"timestamp"\s*:\s*"([^"]+)"', json_string)
+
+    if agent_match:
+        keys["agent_name"] = agent_match.group(1)
+    if rule_match:
+        keys["rule_id"] = rule_match.group(1)
+    if time_match:
+        keys["timestamp"] = time_match.group(1)
+
+    return keys
 
 def load_throttle_data():
+    now = datetime.now()
+    cleaned = {}
+
     if os.path.exists(THROTTLE_FILE):
         try:
-            with open(THROTTLE_FILE, "r") as file:
-                return json.load(file)
-        except json.JSONDecodeError:
-            log_message(f"Malformed throttle file.")
-            return {}
-    return {}
+            with open(THROTTLE_FILE, "r") as f:
+                data = json.load(f)
+                for key, timestamp in data.items():
+                    try:
+                        t = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+                        if now - t < THROTTLE_INTERVAL:
+                            cleaned[key] = timestamp
+                        else:
+                            log_message(f"Throttle expired: {key}")
+                    except ValueError:
+                        log_message(f"Bad timestamp format: {key}")
+        except Exception:
+            log_message("Throttle file malformed. Starting fresh.")
 
-def save_throttle_data(throttle_data):
-    with open(THROTTLE_FILE, "w") as file:
-        json.dump(throttle_data, file)
+    save_throttle_data(cleaned)
+    return cleaned
 
-def should_send_alert(agent_name, rule_id):
+def save_throttle_data(data):
+    with open(THROTTLE_FILE, "w") as f:
+        json.dump(data, f)
+
+def should_throttle(agent_name, rule_id):
     if agent_name == "N/A" or rule_id == "N/A":
-        log_message("Missing agent_name or rule_id")
-        return False
+        return False  # Don't throttle if keys are bad
     throttle_data = load_throttle_data()
     key = f"{agent_name}_{rule_id}"
     now = datetime.now()
     last = throttle_data.get(key)
     if last:
-        last_time = datetime.strptime(last, "%Y-%m-%d %H:%M:%S")
-        if now - last_time < THROTTLE_INTERVAL:
-            log_message(f"Throttled alert for {key}")
-            return False
+        try:
+            last_time = datetime.strptime(last, "%Y-%m-%d %H:%M:%S")
+            if now - last_time < THROTTLE_INTERVAL:
+                log_message(f"⏱️ Throttled: {key}")
+                return True
+        except ValueError:
+            pass
     throttle_data[key] = now.strftime("%Y-%m-%d %H:%M:%S")
     save_throttle_data(throttle_data)
-    return True
+    return False
 
-def post_to_api(data, custom_headers=None):
+def post_to_api(raw_json, extra_headers=None):
     headers = {"Content-Type": "application/json"}
-    if custom_headers:
-        headers.update(custom_headers)
+    if extra_headers:
+        headers.update(extra_headers)
     try:
-        response = requests.post(API_ENDPOINT, headers=headers, json=data)
-        log_message(f"Sent to {API_ENDPOINT}, Status: {response.status_code}")
-        log_message(f"Response: {response.text}")
+        response = requests.post(API_ENDPOINT, headers=headers, data=raw_json.encode())
+        log_message(f"📡 Sent to {API_ENDPOINT} | Status: {response.status_code}")
+        log_message(f"🔁 Response: {response.text}")
     except Exception as e:
-        log_message(f"Failed POST: {e}")
+        log_message(f"❌ Failed to POST to API: {e}")
 
 if __name__ == "__main__":
-    log_message("Starting JSON-based alert forwarder")
+    log_message("🚀 Starting AI alert processor")
 
-    if not os.path.exists(ALERT_FILE):
-        log_message("No alert data file.")
+    if len(sys.argv) < 2:
+        log_message("⚠️ No alert file passed.")
         sys.exit(1)
 
-    raw_json = read_json_file(ALERT_FILE)
+    ALERT_FILE = sys.argv[1]
+    log_message(f"📥 Reading alert file: {ALERT_FILE}")
+
+    if not os.path.exists(ALERT_FILE):
+        log_message(f"⚠️ File does not exist: {ALERT_FILE}")
+        sys.exit(1)
+
+    raw_json = read_raw_file(ALERT_FILE)
     throttle_keys = extract_throttle_keys(raw_json)
 
     agent_name = throttle_keys.get("agent_name", "N/A")
     rule_id = throttle_keys.get("rule_id", "N/A")
 
-    if should_send_alert(agent_name, rule_id):
-        try:
-            full_data = json.loads(raw_json)
-        except json.JSONDecodeError as e:
-            log_message(f"Failed to parse JSON before send: {e}")
-            sys.exit(1)
+    if should_throttle(agent_name, rule_id):
+        sys.exit(0)  # Throttled alert, exit quietly
 
-        # Add SHA256 customer key
-        full_data["sha256"] = SHA256_KEY
-
-        # Save to file
+    try:
         with open(OUTPUT_FILE, "w") as out:
-            json.dump(full_data, out)
+            out.write(raw_json)
+        log_message(f"✅ Raw JSON written to {OUTPUT_FILE}")
+    except Exception as e:
+        log_message(f"❌ Failed writing raw output: {e}")
+        save_debug_log(raw_json, f"Output write failed: {e}")
+        sys.exit(1)
 
-        log_message(f"Saved raw data with sha256 to {OUTPUT_FILE}")
-
-        # Send to API
-        post_to_api(full_data, {
-            'X-Email-Enabled': 'true',
-            'X-WhatsApp-Enabled': 'true',
-            'X-Email-Score-Threshold': '6',
-            'X-WhatsApp-Score-Threshold': '8',
-            'X-Ticket-Email': 'soc@domain.com',
-            'X-Ticket-Email-Score-Threshold': '8',
-            'X-Ticket-Email-Subject': 'Custom Security Alert Notification',
-            'X-Source-System': 'production_firewall',
-            'X-Attachment-Format': 'txt',
-            'X-Sha256': SHA256_KEY,
-            'X-Exclude-Ip-Range': '192.168.1.0/24,10.0.0.0/8',
-            'X-Exclude-Keywords': 'maintenance,test',
-            'X-logs-bucket': 'true'
-        })
-    else:
-        log_message(f"Alert not sent due to throttling.")
+    post_to_api(raw_json, {
+        'X-Email-Enabled': 'true',
+        'X-Slack-Enabled': 'true',
+        'X-slack_score_threshold': '5',
+        'X-WhatsApp-Enabled': 'true',
+        'X-Email-Score-Threshold': '5',
+        'X-WhatsApp-Score-Threshold': '5',
+        'X-Ticket-Email': 'eitanroz1@gmail.com',
+        'X-Ticket-Email-Score-Threshold': '5',
+        'X-Ticket-Email-Subject': 'Custom Security Alert Notification',
+        'X-Source-System': 'production_firewall',
+        'X-Attachment-Format': 'txt',
+        'X-Sha256': SHA256_KEY,
+        'X-Exclude-Ip-Range': '192.168.1.0/24,10.0.0.0/8',
+        'X-Exclude-Keywords': 'maintenance,test',
+        'X-logs-bucket': 'true'
+    })
